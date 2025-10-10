@@ -1,2 +1,2 @@
 # verify-success
-Verification message
+Verification Success, Please go back to the App.
