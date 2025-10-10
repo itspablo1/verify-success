@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Email Verified</title>
   <style>
     body {
@@ -37,5 +37,35 @@
     <h1>✅ Email Verified!</h1>
     <p>Your account has been successfully verified.<br>You can now log in from your mobile app.</p>
   </div>
+
+  <script>
+    // ✅ Get email from the URL query (Supabase sends it)
+    const email = new URLSearchParams(window.location.search).get("email");
+
+    if (email) {
+      // ✅ Update Supabase 'users' table → set verified=true
+      fetch("https://yfbgtsqdmbbvclalttbz.supabase.co/rest/v1/users?email=eq." + email, {
+        method: "PATCH",
+        headers: {
+          "apikey": "sb_service_role_yourServiceRoleKeyHere",
+          "Authorization": "sb_publishable_gXTp4CWTIV4sg02v10_GIg_yh1nbww2",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({ verified: true })
+      })
+      .then(res => {
+        console.log("User verified successfully:", res.status);
+      })
+      .catch(err => console.error("Error updating verification:", err));
+    } else {
+      console.warn("No email found in URL.");
+    }
+
+    // 🧩 Optional: automatically redirect back to your Android app (deep link)
+    setTimeout(() => {
+      window.location.href = "mobilebased://verified";
+    }, 2000);
+  </script>
 </body>
 </html>
