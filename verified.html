@@ -55,24 +55,55 @@
   </div>
 
   <script>
-    // ✅ Get email from the Supabase redirect URL
-    const email = new URLSearchParams(window.location.search).get("email");
+    // 🧩 Supabase URL and public key
+    const SUPABASE_URL = "https://yfbgtsqdmbbvclalttbz.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_gXTp4CWTIV4sg02v10_GIg_yh1nbww2";
 
-    if (email) {
-      console.log("Email found:", email);
+    // ✅ Supabase redirects with an access token in the URL hash (after #)
+    const params = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = params.get("access_token");
 
-      // ✅ Auto-redirect back to app after 3 seconds
-      setTimeout(() => {
-        const deepLink = `mobilebased://verified?email=${encodeURIComponent(email)}`;
-        window.location.href = deepLink;
-      }, 3000);
+    async function handleVerification() {
+      if (!accessToken) {
+        console.warn("⚠️ No access token found in URL.");
+        document.getElementById("openAppLink").textContent = "⚠️ Missing email info. Please open the app manually.";
+        return;
+      }
 
-      // ✅ Also set the manual button link (for fallback)
-      document.getElementById("openAppLink").href = `mobilebased://verified?email=${encodeURIComponent(email)}`;
-    } else {
-      console.warn("No email found in URL — cannot redirect automatically.");
-      document.getElementById("openAppLink").textContent = "⚠️ Missing email info. Please open the app manually.";
+      try {
+        // ✅ Get the user info (to extract email)
+        const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "apikey": SUPABASE_ANON_KEY
+          }
+        });
+
+        const data = await res.json();
+        const email = data.email;
+
+        if (email) {
+          console.log("✅ Email detected:", email);
+
+          // ✅ Redirect to app with email after 3 seconds
+          setTimeout(() => {
+            const deepLink = `mobilebased://verified?email=${encodeURIComponent(email)}`;
+            window.location.href = deepLink;
+          }, 3000);
+
+          // ✅ Set manual open link (fallback)
+          document.getElementById("openAppLink").href = `mobilebased://verified?email=${encodeURIComponent(email)}`;
+        } else {
+          console.warn("⚠️ Email not found in token.");
+          document.getElementById("openAppLink").textContent = "⚠️ Email not detected. Please open the app manually.";
+        }
+      } catch (err) {
+        console.error("Error verifying:", err);
+        document.getElementById("openAppLink").textContent = "⚠️ Verification error. Please try again.";
+      }
     }
+
+    handleVerification();
   </script>
 </body>
 </html>
