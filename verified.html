@@ -21,6 +21,7 @@
       max-width: 400px;
       margin: 0 auto;
       box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      animation: fadeIn 1s ease-in;
     }
     h1 {
       font-size: 26px;
@@ -30,42 +31,48 @@
       font-size: 16px;
       color: #333;
     }
+    a {
+      display: inline-block;
+      margin-top: 15px;
+      color: #FF5F15;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
   <div class="box">
     <h1>✅ Email Verified!</h1>
     <p>Your account has been successfully verified.<br>You can now log in from your mobile app.</p>
+    <a id="openAppLink" href="#">🔗 Open the Mobile-Based App</a>
   </div>
 
   <script>
-    // ✅ Get email from the URL query (Supabase sends it)
+    // ✅ Get email from the Supabase redirect URL
     const email = new URLSearchParams(window.location.search).get("email");
 
     if (email) {
-      // ✅ Update Supabase 'users' table → set verified=true
-      fetch("https://yfbgtsqdmbbvclalttbz.supabase.co/rest/v1/users?email=eq." + email, {
-        method: "PATCH",
-        headers: {
-          "apikey": "sb_service_role_yourServiceRoleKeyHere",
-          "Authorization": "sb_publishable_gXTp4CWTIV4sg02v10_GIg_yh1nbww2",
-          "Content-Type": "application/json",
-          "Prefer": "return=minimal"
-        },
-        body: JSON.stringify({ verified: true })
-      })
-      .then(res => {
-        console.log("User verified successfully:", res.status);
-      })
-      .catch(err => console.error("Error updating verification:", err));
-    } else {
-      console.warn("No email found in URL.");
-    }
+      console.log("Email found:", email);
 
-    // 🧩 Optional: automatically redirect back to your Android app (deep link)
-    setTimeout(() => {
-      window.location.href = "mobilebased://verified";
-    }, 2000);
+      // ✅ Auto-redirect back to app after 3 seconds
+      setTimeout(() => {
+        const deepLink = `mobilebased://verified?email=${encodeURIComponent(email)}`;
+        window.location.href = deepLink;
+      }, 3000);
+
+      // ✅ Also set the manual button link (for fallback)
+      document.getElementById("openAppLink").href = `mobilebased://verified?email=${encodeURIComponent(email)}`;
+    } else {
+      console.warn("No email found in URL — cannot redirect automatically.");
+      document.getElementById("openAppLink").textContent = "⚠️ Missing email info. Please open the app manually.";
+    }
   </script>
 </body>
 </html>
